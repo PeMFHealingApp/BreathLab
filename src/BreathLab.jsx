@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 export default function BreathLab() {
   const GOLD = "#C49C25";
 
+  // Font + base styles
   useEffect(() => {
     const style = document.createElement("style");
     style.innerHTML =
@@ -11,6 +12,7 @@ export default function BreathLab() {
     return () => document.head.removeChild(style);
   }, []);
 
+  // Responsive stage
   const [size, setSize] = useState(360);
   useEffect(() => {
     const onR = () =>
@@ -19,10 +21,10 @@ export default function BreathLab() {
     window.addEventListener("resize", onR);
     return () => window.removeEventListener("resize", onR);
   }, []);
-  const isNarrow = size < 520; // mobile check for responsive header
+  const isNarrow = size < 520;
 
+  // Load lungs from public
   const RAW_SVG = import.meta.env.BASE_URL + "lungs-lung-svgrepo-com.svg";
-
   const [lungPaths, setLungPaths] = useState(null);
   useEffect(() => {
     let cancelled = false;
@@ -42,6 +44,7 @@ export default function BreathLab() {
     return () => { cancelled = true; };
   }, []);
 
+  // Presets
   const presets = useMemo(
     () => [
       { id: "box4444", name: "BOX 4:4:4:4", phases: [
@@ -90,6 +93,7 @@ export default function BreathLab() {
     []
   );
 
+  // Plan builder
   function buildPlan(p) {
     let plan = p.phases.slice();
     if (p.cycles && p.cycles > 1) {
@@ -100,6 +104,7 @@ export default function BreathLab() {
     return plan;
   }
 
+  // Engine state
   const [current, setCurrent] = useState(presets[0]);
   const [running, setRunning] = useState(false);
   const [phaseIndex, setPhaseIndex] = useState(0);
@@ -107,13 +112,14 @@ export default function BreathLab() {
   const plan = useMemo(() => buildPlan(current), [current]);
   const phase = plan[phaseIndex];
 
+  // Countdown
   const [countdown, setCountdown] = useState(0);
   const countdownRef = useRef(null);
 
   function findFirstInhaleIndex(pPlan) {
     const idx = pPlan.findIndex(ph => (ph.label || "").toLowerCase().includes("inhale"));
     return idx >= 0 ? idx : 0;
-    }
+  }
 
   const handleStart = () => {
     const inhaleIdx = findFirstInhaleIndex(plan);
@@ -142,6 +148,7 @@ export default function BreathLab() {
     if (countdownRef.current) clearInterval(countdownRef.current);
   }, []);
 
+  // Timer
   useEffect(() => {
     if (!running) return;
     const step = 100;
@@ -160,22 +167,19 @@ export default function BreathLab() {
     return () => clearInterval(id);
   }, [running, plan]);
 
+  // Fill logic
   const startLevelRef = useRef(0);
   const lastLevelRef = useRef(0);
-  useEffect(() => {
-    startLevelRef.current = lastLevelRef.current;
-  }, [phaseIndex]);
+  useEffect(() => { startLevelRef.current = lastLevelRef.current; }, [phaseIndex]);
 
   const fillLevel = (() => {
     const label = (phase.label || "").toLowerCase();
     const prev = (plan[(phaseIndex - 1 + plan.length) % plan.length]?.label || "").toLowerCase();
-
     if (label.includes("hold")) {
       if (prev.includes("exhale")) { lastLevelRef.current = 0; return 0; }
       if (prev.includes("inhale") || prev.includes("top-up")) { lastLevelRef.current = 1; return 1; }
       return lastLevelRef.current;
     }
-
     const total = Math.max(phase.seconds, 0.1);
     const t = 1 - remaining / total;
     const eased = t * t * (3 - 2 * t);
@@ -187,6 +191,7 @@ export default function BreathLab() {
 
   const effectiveFill = countdown ? 0 : fillLevel;
 
+  // Geometry
   const padding = Math.round(size * 0.14);
   const side = size - padding * 2;
   const center = { x: size / 2, y: size / 2 };
@@ -227,6 +232,7 @@ export default function BreathLab() {
   const lungTx = lungBox.x + (lungBox.w - VB * svgScale) / 2;
   const lungTy = lungBox.y + (lungBox.h - VB * svgScale) / 2;
 
+  // Wave animation
   const [wavePhase, setWavePhase] = useState(0);
   useEffect(() => {
     let raf = 0;
@@ -260,96 +266,126 @@ export default function BreathLab() {
 
   const displayPhase = countdown ? "GET READY" : phase.label;
 
+  // ---------- Custom dropdown (full width, 40px) ----------
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  useEffect(() => {
+    const onDoc = (e) => { if (!menuRef.current?.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener("pointerdown", onDoc);
+    return () => document.removeEventListener("pointerdown", onDoc);
+  }, []);
+
   return (
     <div style={{ minHeight: "100vh" }}>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: 16 }}>
-        {/* Responsive header: no big visible title; dropdown full-width on mobile */}
-        <header
-          style={{
-            marginBottom: 12,
-            display: "grid",
-            gridTemplateColumns: isNarrow ? "1fr" : "1fr auto auto",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          {/* Accessible name only (visually hidden) */}
-          <h1 style={{ position: "absolute", left: -9999, top: "auto", width: 1, height: 1, overflow: "hidden" }}>
-            Breath Lab
-          </h1>
+        {/* Header: dropdown + start button */}
+        <header style={{ marginBottom: 12, display: "grid", gap: 10 }}>
+          {/* accessible name only */}
+          <h1 style={{ position: "absolute", left: -9999, width: 1, height: 1, overflow: "hidden" }}>Breath Lab</h1>
 
-          {/* PRESET SELECT */}
-          <select
-            value={current.id}
-            onChange={(e) => {
-              const p = presets.find((x) => x.id === e.target.value);
-              setCurrent(p);
-              setRunning(false);
-              setPhaseIndex(0);
-              setRemaining(p.phases[0].seconds);
-              setCountdown(0);
-            }}
-            style={{
-              background: "#111",
-              color: "#e5e7eb",
-              border: `1px solid ${GOLD}`,
-              borderRadius: 12,
-              padding: "12px 14px",
-              paddingRight: 36,
-              fontWeight: 600,
-              width: isNarrow ? "100%" : 280,
-              justifySelf: isNarrow ? "stretch" : "end",
-            }}
-          >
-            {presets.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+          {/* Preset dropdown */}
+          <div ref={menuRef} style={{ position: "relative" }}>
+            <button
+              onClick={() => setMenuOpen((o) => !o)}
+              aria-haspopup="listbox"
+              aria-expanded={menuOpen}
+              style={{
+                width: "100%",
+                height: 40,
+                background: "#111",
+                color: "#e5e7eb",
+                border: `1px solid ${GOLD}`,
+                borderRadius: 0,         // square corners
+                fontWeight: 600,
+                textAlign: "left",
+                padding: "0 44px 0 14px",
+                position: "relative",
+              }}
+            >
+              {current.name}
+              <span
+                aria-hidden="true"
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  fontSize: 16,
+                  color: "#e5e7eb",
+                }}
+              >
+                ▾
+              </span>
+            </button>
 
-          {/* START/PAUSE */}
+            {menuOpen && (
+              <div
+                role="listbox"
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: "100%",
+                  background: "#000",
+                  border: `1px solid ${GOLD}`,
+                  borderTop: "none",
+                  zIndex: 50,
+                  maxHeight: 320,
+                  overflowY: "auto",
+                }}
+              >
+                {presets.map((p) => {
+                  const active = p.id === current.id;
+                  return (
+                    <div
+                      key={p.id}
+                      role="option"
+                      aria-selected={active}
+                      onClick={() => {
+                        setCurrent(p);
+                        setRunning(false);
+                        setPhaseIndex(0);
+                        setRemaining(p.phases[0].seconds);
+                        setCountdown(0);
+                        setMenuOpen(false);
+                      }}
+                      style={{
+                        padding: "12px 14px",
+                        cursor: "pointer",
+                        color: active ? "#ffffff" : "#e5e7eb",
+                        background: active ? "#0a0a0a" : "transparent",
+                        borderBottom: "1px solid #111",
+                        fontWeight: active ? 700 : 600,
+                      }}
+                    >
+                      {p.name}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* START/PAUSE full width, square corners */}
           <button
             onClick={() => { if (running) setRunning(false); else if (!countdown) handleStart(); }}
             disabled={!!countdown}
             style={{
+              width: "100%",
+              height: 44,
               background: GOLD,
               color: "#111",
               border: `1px solid ${GOLD}`,
-              borderRadius: 12,
-              padding: "12px 16px",
+              borderRadius: 0,          // square corners
               fontWeight: 700,
               opacity: countdown ? 0.7 : 1,
-              justifySelf: isNarrow ? "start" : "end",
             }}
           >
             {running ? "PAUSE" : countdown ? `GET READY ${countdown}` : "START"}
           </button>
-
-          {/* NEXT */}
-          <button
-            onClick={() => {
-              const i = presets.findIndex((p) => p.id === current.id);
-              const n = presets[(i + 1) % presets.length];
-              setCurrent(n);
-              setRunning(false);
-              setPhaseIndex(0);
-              setRemaining(n.phases[0].seconds);
-              setCountdown(0);
-            }}
-            style={{
-              background: "#fff",
-              color: "#111",
-              border: "1px solid #d4d4d8",
-              borderRadius: 12,
-              padding: "12px 16px",
-              fontWeight: 400,
-              textTransform: "uppercase",
-              justifySelf: isNarrow ? "start" : "end",
-            }}
-          >
-            Next
-          </button>
         </header>
 
+        {/* Visual Card */}
         <section style={{ background: "#0a0a0a", borderRadius: 16, padding: 16, border: "1px solid #262626" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <div style={{ fontSize: 18, fontWeight: 700 }}>{current.name}</div>
