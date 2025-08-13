@@ -400,8 +400,9 @@ export default function BreathLab() {
                 return (<>
                   <text x={size / 2} y={padding - 22} textAnchor="middle" fill="#e5e7eb" fontSize={18}>HOLD</text>
                   <text x={size / 2} y={size - padding + 38} textAnchor="middle" fill="#e5e7eb" fontSize={18}>HOLD</text>
-                  <text x={inhaleX} y={size / 2} textAnchor="end" dominantBaseline="middle" fill={GOLD} fontSize={18}>INHALE</text>
-                  <text x={exhaleX} y={size / 2} textAnchor="start" dominantBaseline="middle" fill={GOLD} fontSize={18}>EXHALE</text>
+                  {/* SHORTENED LEFT/RIGHT BOX LABELS ONLY */}
+                  <text x={inhaleX} y={size / 2} textAnchor="end" dominantBaseline="middle" fill={GOLD} fontSize={18}>IN-H</text>
+                  <text x={exhaleX} y={size / 2} textAnchor="start" dominantBaseline="middle" fill={GOLD} fontSize={18}>EX-H</text>
                 </>);
               })()}
 
