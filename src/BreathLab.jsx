@@ -19,6 +19,7 @@ export default function BreathLab() {
     window.addEventListener("resize", onR);
     return () => window.removeEventListener("resize", onR);
   }, []);
+  const isNarrow = size < 520; // mobile check for responsive header
 
   const RAW_SVG = import.meta.env.BASE_URL + "lungs-lung-svgrepo-com.svg";
 
@@ -112,7 +113,7 @@ export default function BreathLab() {
   function findFirstInhaleIndex(pPlan) {
     const idx = pPlan.findIndex(ph => (ph.label || "").toLowerCase().includes("inhale"));
     return idx >= 0 ? idx : 0;
-  }
+    }
 
   const handleStart = () => {
     const inhaleIdx = findFirstInhaleIndex(plan);
@@ -262,8 +263,22 @@ export default function BreathLab() {
   return (
     <div style={{ minHeight: "100vh" }}>
       <div style={{ maxWidth: 760, margin: "0 auto", padding: 16 }}>
-        <header style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-          <h1 style={{ color: GOLD, fontWeight: 700, fontSize: 30, marginRight: "auto" }}>Breath Lab</h1>
+        {/* Responsive header: no big visible title; dropdown full-width on mobile */}
+        <header
+          style={{
+            marginBottom: 12,
+            display: "grid",
+            gridTemplateColumns: isNarrow ? "1fr" : "1fr auto auto",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          {/* Accessible name only (visually hidden) */}
+          <h1 style={{ position: "absolute", left: -9999, top: "auto", width: 1, height: 1, overflow: "hidden" }}>
+            Breath Lab
+          </h1>
+
+          {/* PRESET SELECT */}
           <select
             value={current.id}
             onChange={(e) => {
@@ -274,17 +289,42 @@ export default function BreathLab() {
               setRemaining(p.phases[0].seconds);
               setCountdown(0);
             }}
-            style={{ background: "#111", color: "#e5e7eb", border: `1px solid ${GOLD}`, borderRadius: 12, padding: "10px 12px", paddingRight: 36, fontWeight: 600 }}
+            style={{
+              background: "#111",
+              color: "#e5e7eb",
+              border: `1px solid ${GOLD}`,
+              borderRadius: 12,
+              padding: "12px 14px",
+              paddingRight: 36,
+              fontWeight: 600,
+              width: isNarrow ? "100%" : 280,
+              justifySelf: isNarrow ? "stretch" : "end",
+            }}
           >
-            {presets.map((p) => (<option key={p.id} value={p.id}>{p.name}</option>))}
+            {presets.map((p) => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
           </select>
+
+          {/* START/PAUSE */}
           <button
             onClick={() => { if (running) setRunning(false); else if (!countdown) handleStart(); }}
             disabled={!!countdown}
-            style={{ background: GOLD, color: "#111", border: `1px solid ${GOLD}`, borderRadius: 12, padding: "10px 16px", fontWeight: 700, opacity: countdown ? 0.7 : 1 }}
+            style={{
+              background: GOLD,
+              color: "#111",
+              border: `1px solid ${GOLD}`,
+              borderRadius: 12,
+              padding: "12px 16px",
+              fontWeight: 700,
+              opacity: countdown ? 0.7 : 1,
+              justifySelf: isNarrow ? "start" : "end",
+            }}
           >
             {running ? "PAUSE" : countdown ? `GET READY ${countdown}` : "START"}
           </button>
+
+          {/* NEXT */}
           <button
             onClick={() => {
               const i = presets.findIndex((p) => p.id === current.id);
@@ -295,7 +335,16 @@ export default function BreathLab() {
               setRemaining(n.phases[0].seconds);
               setCountdown(0);
             }}
-            style={{ background: "#fff", color: "#111", border: "1px solid #d4d4d8", borderRadius: 12, padding: "10px 16px", fontWeight: 400, textTransform: "uppercase" }}
+            style={{
+              background: "#fff",
+              color: "#111",
+              border: "1px solid #d4d4d8",
+              borderRadius: 12,
+              padding: "12px 16px",
+              fontWeight: 400,
+              textTransform: "uppercase",
+              justifySelf: isNarrow ? "start" : "end",
+            }}
           >
             Next
           </button>
@@ -356,7 +405,7 @@ export default function BreathLab() {
 
           <div style={{ textAlign: "center", marginTop: 12 }}>
             <div style={{ color: "#9ca3af", fontSize: 14, letterSpacing: 0.3 }}>CURRENT PHASE</div>
-            <div style={{ color: GOLD, fontWeight: 700, fontSize: 26 }}>{countdown ? "GET READY" : phase.label}</div>
+            <div style={{ color: GOLD, fontWeight: 700, fontSize: 26 }}>{displayPhase}</div>
             <div style={{ color: "#9ca3af", fontSize: 14 }}>{Number(remaining).toFixed(1)}s</div>
           </div>
         </section>
