@@ -21,9 +21,8 @@ export default function BreathLab() {
     window.addEventListener("resize", onR);
     return () => window.removeEventListener("resize", onR);
   }, []);
-  const isNarrow = size < 520;
 
-  // Load lungs from public
+  // Load lungs from public (GitHub Pages safe)
   const RAW_SVG = import.meta.env.BASE_URL + "lungs-lung-svgrepo-com.svg";
   const [lungPaths, setLungPaths] = useState(null);
   useEffect(() => {
@@ -93,7 +92,6 @@ export default function BreathLab() {
     []
   );
 
-  // Plan builder
   function buildPlan(p) {
     let plan = p.phases.slice();
     if (p.cycles && p.cycles > 1) {
@@ -104,7 +102,6 @@ export default function BreathLab() {
     return plan;
   }
 
-  // Engine state
   const [current, setCurrent] = useState(presets[0]);
   const [running, setRunning] = useState(false);
   const [phaseIndex, setPhaseIndex] = useState(0);
@@ -112,14 +109,14 @@ export default function BreathLab() {
   const plan = useMemo(() => buildPlan(current), [current]);
   const phase = plan[phaseIndex];
 
-  // Countdown
+  // Countdown that always starts with Inhale
   const [countdown, setCountdown] = useState(0);
   const countdownRef = useRef(null);
 
   function findFirstInhaleIndex(pPlan) {
     const idx = pPlan.findIndex(ph => (ph.label || "").toLowerCase().includes("inhale"));
     return idx >= 0 ? idx : 0;
-  }
+    }
 
   const handleStart = () => {
     const inhaleIdx = findFirstInhaleIndex(plan);
@@ -148,7 +145,7 @@ export default function BreathLab() {
     if (countdownRef.current) clearInterval(countdownRef.current);
   }, []);
 
-  // Timer
+  // Engine timer
   useEffect(() => {
     if (!running) return;
     const step = 100;
@@ -167,7 +164,7 @@ export default function BreathLab() {
     return () => clearInterval(id);
   }, [running, plan]);
 
-  // Fill logic
+  // Fill computation
   const startLevelRef = useRef(0);
   const lastLevelRef = useRef(0);
   useEffect(() => { startLevelRef.current = lastLevelRef.current; }, [phaseIndex]);
@@ -175,11 +172,13 @@ export default function BreathLab() {
   const fillLevel = (() => {
     const label = (phase.label || "").toLowerCase();
     const prev = (plan[(phaseIndex - 1 + plan.length) % plan.length]?.label || "").toLowerCase();
+
     if (label.includes("hold")) {
       if (prev.includes("exhale")) { lastLevelRef.current = 0; return 0; }
       if (prev.includes("inhale") || prev.includes("top-up")) { lastLevelRef.current = 1; return 1; }
       return lastLevelRef.current;
     }
+
     const total = Math.max(phase.seconds, 0.1);
     const t = 1 - remaining / total;
     const eased = t * t * (3 - 2 * t);
@@ -277,115 +276,94 @@ export default function BreathLab() {
 
   return (
     <div style={{ minHeight: "100vh" }}>
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: 16 }}>
-        {/* Header: dropdown + start button */}
-        <header style={{ marginBottom: 12, display: "grid", gap: 10 }}>
-          {/* accessible name only */}
-          <h1 style={{ position: "absolute", left: -9999, width: 1, height: 1, overflow: "hidden" }}>Breath Lab</h1>
+      <div style={{ maxWidth: 760, margin: "0 auto", padding: 16, display: "grid", gap: 12 }}>
+        {/* Accessible app name for screen readers only */}
+        <h1 style={{ position: "absolute", left: -9999, width: 1, height: 1, overflow: "hidden" }}>Breath Lab</h1>
 
-          {/* Preset dropdown */}
-          <div ref={menuRef} style={{ position: "relative" }}>
-            <button
-              onClick={() => setMenuOpen((o) => !o)}
-              aria-haspopup="listbox"
-              aria-expanded={menuOpen}
-              style={{
-                width: "100%",
-                height: 40,
-                background: "#111",
-                color: "#e5e7eb",
-                border: `1px solid ${GOLD}`,
-                borderRadius: 0,         // square corners
-                fontWeight: 600,
-                textAlign: "left",
-                padding: "0 44px 0 14px",
-                position: "relative",
-              }}
-            >
-              {current.name}
-              <span
-                aria-hidden="true"
-                style={{
-                  position: "absolute",
-                  right: 12,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  fontSize: 16,
-                  color: "#e5e7eb",
-                }}
-              >
-                ▾
-              </span>
-            </button>
-
-            {menuOpen && (
-              <div
-                role="listbox"
-                style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  top: "100%",
-                  background: "#000",
-                  border: `1px solid ${GOLD}`,
-                  borderTop: "none",
-                  zIndex: 50,
-                  maxHeight: 320,
-                  overflowY: "auto",
-                }}
-              >
-                {presets.map((p) => {
-                  const active = p.id === current.id;
-                  return (
-                    <div
-                      key={p.id}
-                      role="option"
-                      aria-selected={active}
-                      onClick={() => {
-                        setCurrent(p);
-                        setRunning(false);
-                        setPhaseIndex(0);
-                        setRemaining(p.phases[0].seconds);
-                        setCountdown(0);
-                        setMenuOpen(false);
-                      }}
-                      style={{
-                        padding: "12px 14px",
-                        cursor: "pointer",
-                        color: active ? "#ffffff" : "#e5e7eb",
-                        background: active ? "#0a0a0a" : "transparent",
-                        borderBottom: "1px solid #111",
-                        fontWeight: active ? 700 : 600,
-                      }}
-                    >
-                      {p.name}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* START/PAUSE full width, square corners */}
+        {/* Preset dropdown at the very top */}
+        <div ref={menuRef} style={{ position: "relative" }}>
           <button
-            onClick={() => { if (running) setRunning(false); else if (!countdown) handleStart(); }}
-            disabled={!!countdown}
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-haspopup="listbox"
+            aria-expanded={menuOpen}
             style={{
               width: "100%",
-              height: 44,
-              background: GOLD,
-              color: "#111",
+              height: 40,
+              background: "#111",
+              color: "#e5e7eb",
               border: `1px solid ${GOLD}`,
-              borderRadius: 0,          // square corners
-              fontWeight: 700,
-              opacity: countdown ? 0.7 : 1,
+              borderRadius: 0,
+              fontWeight: 600,
+              textAlign: "left",
+              padding: "0 44px 0 14px",
+              position: "relative",
             }}
           >
-            {running ? "PAUSE" : countdown ? `GET READY ${countdown}` : "START"}
+            {current.name}
+            <span
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                right: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
+                fontSize: 16,
+                color: "#e5e7eb",
+              }}
+            >
+              ▾
+            </span>
           </button>
-        </header>
 
-        {/* Visual Card */}
+          {menuOpen && (
+            <div
+              role="listbox"
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: "100%",
+                background: "#000",
+                border: `1px solid ${GOLD}`,
+                borderTop: "none",
+                zIndex: 50,
+                maxHeight: 320,
+                overflowY: "auto",
+              }}
+            >
+              {presets.map((p) => {
+                const active = p.id === current.id;
+                return (
+                  <div
+                    key={p.id}
+                    role="option"
+                    aria-selected={active}
+                    onClick={() => {
+                      setCurrent(p);
+                      setRunning(false);
+                      setPhaseIndex(0);
+                      setRemaining(p.phases[0].seconds);
+                      setCountdown(0);
+                      setMenuOpen(false);
+                    }}
+                    style={{
+                      padding: "12px 14px",
+                      cursor: "pointer",
+                      color: active ? "#ffffff" : "#e5e7eb",
+                      background: active ? "#0a0a0a" : "transparent",
+                      borderBottom: "1px solid #111",
+                      fontWeight: active ? 700 : 600,
+                    }}
+                  >
+                    {p.name}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Main visual card */}
         <section style={{ background: "#0a0a0a", borderRadius: 16, padding: 16, border: "1px solid #262626" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
             <div style={{ fontSize: 18, fontWeight: 700 }}>{current.name}</div>
@@ -410,8 +388,10 @@ export default function BreathLab() {
                 </mask>
               </defs>
 
+              {/* Outer square frame */}
               <rect x={padding} y={padding} width={side} height={side} rx={16} fill="transparent" stroke={GOLD} strokeWidth={2} />
 
+              {/* Labels outside with equal spacing */}
               {(() => {
                 const gap = Math.max(24, Math.round(padding * 0.35));
                 const SAFE = 16;
@@ -425,20 +405,26 @@ export default function BreathLab() {
                 </>);
               })()}
 
+              {/* Inner track */}
               <rect x={padding} y={padding} width={side} height={side} rx={16} fill="none" stroke={GOLD} strokeOpacity="0.25" strokeWidth="2" />
 
+              {/* Lungs outline */}
               <g transform={`translate(${lungTx},${lungTy}) scale(${svgScale})`} opacity="0.95" pointerEvents="none">
                 {lungPaths ? (<><path d={lungPaths[0]} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" /><path d={lungPaths[1]} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" /><path d={lungPaths[2]} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" /></>) : (<><ellipse cx={250} cy={260} rx={150} ry={210} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" /><ellipse cx={250} cy={260} rx={150} ry={210} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" /></>)}
               </g>
 
+              {/* Water fill */}
               <g mask="url(#lungsMask)"><path d={wavePath} fill="url(#lungGrad)" /><path d={wavePath} fill="url(#sacred)" /></g>
 
+              {/* Glowing dot */}
               <circle cx={dot.x} cy={dot.y} r="10" fill={GOLD} filter="url(#glow)" />
 
+              {/* Countdown overlay */}
               {countdown ? (<><rect x={0} y={0} width={size} height={size} fill="#000" opacity="0.35" /><text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="middle" fill={GOLD} fontSize={Math.round(size*0.28)} fontWeight="700">{countdown}</text></>) : null}
             </svg>
           </div>
 
+          {/* Phase info */}
           <div style={{ textAlign: "center", marginTop: 12 }}>
             <div style={{ color: "#9ca3af", fontSize: 14, letterSpacing: 0.3 }}>CURRENT PHASE</div>
             <div style={{ color: GOLD, fontWeight: 700, fontSize: 26 }}>{displayPhase}</div>
@@ -446,33 +432,60 @@ export default function BreathLab() {
           </div>
         </section>
 
+        {/* START/PAUSE button moved here — directly above the footer */}
+        <button
+          onClick={() => { if (running) setRunning(false); else if (!countdown) handleStart(); }}
+          disabled={!!countdown}
+          style={{
+            width: "100%",
+            height: 44,
+            background: GOLD,
+            color: "#111",
+            border: `1px solid ${GOLD}`,
+            borderRadius: 0,
+            fontWeight: 700,
+            opacity: countdown ? 0.7 : 1,
+          }}
+        >
+          {running ? "PAUSE" : countdown ? `GET READY ${countdown}` : "START"}
+        </button>
+
+        {/* Custom timing (only for CUSTOM) */}
         {current.customizable && (
-          <section style={{ background: "#0a0a0a", borderRadius: 16, padding: 16, border: "1px solid #262626", marginTop: 12 }}>
+          <section style={{ background: "#0a0a0a", borderRadius: 16, padding: 16, border: "1px solid #262626" }}>
             <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Custom timing</div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(64px, auto))", gap: 12 }}>
               {current.phases.map((p, i) => (
                 <label key={i} style={{ display: "grid", gap: 6 }}>
                   <span style={{ fontSize: 12, color: "#9ca3af" }}>{p.label}</span>
-                  <input type="number" min={0.1} step={0.1} value={p.seconds}
-                    onChange={(e)=>{
+                  <input
+                    type="number"
+                    min={0.1}
+                    step={0.1}
+                    value={p.seconds}
+                    onChange={(e) => {
                       const v = Math.max(0.1, Number(e.target.value || 0));
                       const next = { ...current, phases: current.phases.map((pp,ii)=> ii===i?{...pp, seconds:v}:pp) };
                       setCurrent(next);
                     }}
-                    style={{ background:"#111", color:"#eaeaea", border:"1px solid #3f3f46", borderRadius:10, padding:"8px 10px", width:64, textAlign:"center" }} />
+                    style={{ background:"#111", color:"#eaeaea", border:"1px solid #3f3f46", borderRadius:10, padding:"8px 10px", width:64, textAlign:"center" }}
+                  />
                 </label>
               ))}
             </div>
             <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "flex-end" }}>
-              <button onClick={()=>{ setRunning(false); setPhaseIndex(0); setRemaining(current.phases[0].seconds); setCountdown(0); }}
-                style={{ background:GOLD, color:"#111", border:`1px solid ${GOLD}`, borderRadius:12, padding:"10px 16px", fontWeight:700 }}>
+              <button
+                onClick={()=>{ setRunning(false); setPhaseIndex(0); setRemaining(current.phases[0].seconds); setCountdown(0); }}
+                style={{ background:GOLD, color:"#111", border:`1px solid ${GOLD}`, borderRadius:12, padding:"10px 16px", fontWeight:700 }}
+              >
                 APPLY
               </button>
             </div>
           </section>
         )}
 
-        <footer style={{ marginTop: 12, color: "#9ca3af", fontSize: 12, textAlign: "center" }}>
+        {/* Footer */}
+        <footer style={{ color: "#9ca3af", fontSize: 12, textAlign: "center" }}>
           powered by <a href="https://www.pemfhealing.app" style={{ color: GOLD, textDecoration: "none" }}>www.pemfhealing.app</a> · © 2025
         </footer>
       </div>
