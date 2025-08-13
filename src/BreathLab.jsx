@@ -20,7 +20,7 @@ export default function BreathLab() {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  const RAW_SVG = "/lungs-lung-svgrepo-com.svg";
+  const RAW_SVG = import.meta.env.BASE_URL + "lungs-lung-svgrepo-com.svg";
 
   const [lungPaths, setLungPaths] = useState(null);
   useEffect(() => {
