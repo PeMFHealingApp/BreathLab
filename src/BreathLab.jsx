@@ -49,45 +49,58 @@ export default function BreathLab() {
       { id: "box4444", name: "BOX 4:4:4:4", phases: [
         { label: "Inhale", seconds: 4 }, { label: "Hold", seconds: 4 },
         { label: "Exhale", seconds: 4 }, { label: "Hold", seconds: 4 }
-      ], note: "Balanced box breathing." },
+      ], note: "Balanced box breathing.",
+        instructions: "Nasal breathing. Inhale 4, hold 4, exhale 4, hold 4. Keep shoulders soft and belly relaxed." },
       { id: "coherent55", name: "COHERENT 5:5", phases: [
         { label: "Inhale", seconds: 5 }, { label: "Exhale", seconds: 5 }
-      ], note: "Resonant HRV." },
+      ], note: "Resonant HRV.",
+        instructions: "Gentle nasal breathing. Inhale 5, exhale 5. Smooth and quiet." },
       { id: "478", name: "4–7–8", phases: [
         { label: "Inhale", seconds: 4 }, { label: "Hold", seconds: 7 }, { label: "Exhale", seconds: 8 }
-      ], note: "Downshift for sleep." },
+      ], note: "Downshift for sleep.",
+        instructions: "Exhale through the mouth for 8 with the tongue placed at the roof of the mouth behind the teeth." },
       { id: "sigh", name: "PHYSIOLOGICAL SIGH", phases: [
         { label: "Inhale", seconds: 2 }, { label: "Top-up Inhale", seconds: 1 }, { label: "Long Exhale", seconds: 6 }
-      ], note: "Two inhales and long exhale." },
+      ], note: "Two inhales and long exhale.",
+        instructions: "Two quick nasal inhales, then a long soft mouth exhale. Keep the second inhale short." },
       { id: "cadence36", name: "CADENCE 3:6", phases: [
         { label: "Inhale", seconds: 3 }, { label: "Exhale", seconds: 6 }
-      ], note: "Vagal tone focus." },
+      ], note: "Vagal tone focus.",
+        instructions: "Nasal inhale 3, soft mouth exhale 6. Do not force the exhale." },
       { id: "bof", name: "BREATH OF FIRE 60s", phases: [
         { label: "Inhale", seconds: 0.33 }, { label: "Exhale", seconds: 0.33 }
-      ], cycles: 90, note: "Rapid rhythmic. Stop if dizzy." },
+      ], cycles: 90, note: "Rapid rhythmic. Stop if dizzy.",
+        instructions: "Rapid small belly breaths through the nose. Keep it rhythmic. Stop if dizzy." },
       { id: "power30", name: "POWER 30 + HOLD", phases: [
         { label: "Inhale", seconds: 1 }, { label: "Exhale", seconds: 1 }
       ], cycles: 30, tail: [{ label: "Exhale Hold", seconds: 45 }, { label: "Inhale Hold", seconds: 15 }],
-        note: "Wim Hof style." },
+        note: "Wim Hof style.",
+        instructions: "Thirty fast breaths, then exhale hold, then short inhale hold. Stay seated and relaxed." },
       { id: "tesla369", name: "TESLA 3:6:9", phases: [
         { label: "Inhale", seconds: 3 }, { label: "Hold", seconds: 6 }, { label: "Exhale", seconds: 9 }
-      ], note: "Sacred 3 6 9." },
+      ], note: "Sacred 3 6 9.",
+        instructions: "Nasal inhale 3, hold 6, soft exhale 9. Relax jaw and belly." },
       { id: "golden", name: "GOLDEN RATIO 5:3:8", phases: [
         { label: "Inhale", seconds: 5 }, { label: "Hold", seconds: 3 }, { label: "Exhale", seconds: 8 }
-      ], note: "Fibonacci inspired." },
+      ], note: "Fibonacci inspired.",
+        instructions: "Inhale 5, hold 3, exhale 8. Keep the breath light and steady." },
       { id: "fibo235", name: "FIBONACCI 2:3:5:3", phases: [
         { label: "Inhale", seconds: 2 }, { label: "Hold", seconds: 3 }, { label: "Exhale", seconds: 5 }, { label: "Hold", seconds: 3 }
-      ], note: "Fibonacci box." },
+      ], note: "Fibonacci box.",
+        instructions: "Inhale 2, hold 3, exhale 5, hold 3. Gentle pace." },
       { id: "seven11", name: "7 11 RELAX", phases: [
         { label: "Inhale", seconds: 7 }, { label: "Exhale", seconds: 11 }
-      ], note: "Long exhale." },
+      ], note: "Long exhale.",
+        instructions: "Inhale 7 through the nose, exhale 11 through the mouth. Long and soft." },
       { id: "twofour", name: "2 4 CALM", phases: [
         { label: "Inhale", seconds: 2 }, { label: "Exhale", seconds: 4 }
-      ], note: "Quick downshift." },
+      ], note: "Quick downshift.",
+        instructions: "Inhale 2, exhale 4. Easy nasal breathing." },
       { id: "custom", name: "CUSTOM", customizable: true, phases: [
         { label: "Inhale", seconds: 4 }, { label: "Hold", seconds: 4 },
         { label: "Exhale", seconds: 4 }, { label: "Hold", seconds: 4 }
-      ], note: "Your timing." }
+      ], note: "Your timing.",
+        instructions: "Set your timing and breathe lightly. Keep shoulders relaxed." }
     ],
     []
   );
@@ -432,6 +445,13 @@ export default function BreathLab() {
             <div style={{ color: "#9ca3af", fontSize: 14 }}>{Number(remaining).toFixed(1)}s</div>
           </div>
         </section>
+
+        {/* Short instructions shown right above START */}
+        {current.instructions ? (
+          <p style={{ color: "#9ca3af", fontSize: 13, textAlign: "center", marginTop: 2 }}>
+            {current.instructions}
+          </p>
+        ) : null}
 
         {/* START/PAUSE button moved here — directly above the footer */}
         <button
