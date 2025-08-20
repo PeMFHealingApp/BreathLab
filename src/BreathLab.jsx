@@ -22,7 +22,7 @@ export default function BreathLab() {
     return () => window.removeEventListener("resize", onR);
   }, []);
 
-  // Load lungs from public (GitHub Pages safe)
+  // Load lungs from public
   const RAW_SVG = import.meta.env.BASE_URL + "lungs-lung-svgrepo-com.svg";
   const [lungPaths, setLungPaths] = useState(null);
   useEffect(() => {
@@ -43,64 +43,132 @@ export default function BreathLab() {
     return () => { cancelled = true; };
   }, []);
 
-  // Presets
+  // Presets with notes and short how-to instructions
   const presets = useMemo(
     () => [
-      { id: "box4444", name: "BOX 4:4:4:4", phases: [
-        { label: "Inhale", seconds: 4 }, { label: "Hold", seconds: 4 },
-        { label: "Exhale", seconds: 4 }, { label: "Hold", seconds: 4 }
-      ], note: "Balanced box breathing.",
-        instructions: "Nasal breathing. Inhale 4, hold 4, exhale 4, hold 4. Keep shoulders soft and belly relaxed." },
-      { id: "coherent55", name: "COHERENT 5:5", phases: [
-        { label: "Inhale", seconds: 5 }, { label: "Exhale", seconds: 5 }
-      ], note: "Resonant HRV.",
-        instructions: "Gentle nasal breathing. Inhale 5, exhale 5. Smooth and quiet." },
-      { id: "478", name: "4–7–8", phases: [
-        { label: "Inhale", seconds: 4 }, { label: "Hold", seconds: 7 }, { label: "Exhale", seconds: 8 }
-      ], note: "Downshift for sleep.",
-        instructions: "Exhale through the mouth for 8 with the tongue placed at the roof of the mouth behind the teeth." },
-      { id: "sigh", name: "PHYSIOLOGICAL SIGH", phases: [
-        { label: "Inhale", seconds: 2 }, { label: "Top-up Inhale", seconds: 1 }, { label: "Long Exhale", seconds: 6 }
-      ], note: "Two inhales and long exhale.",
-        instructions: "Two quick nasal inhales, then a long soft mouth exhale. Keep the second inhale short." },
-      { id: "cadence36", name: "CADENCE 3:6", phases: [
-        { label: "Inhale", seconds: 3 }, { label: "Exhale", seconds: 6 }
-      ], note: "Vagal tone focus.",
-        instructions: "Nasal inhale 3, soft mouth exhale 6. Do not force the exhale." },
-      { id: "bof", name: "BREATH OF FIRE 60s", phases: [
-        { label: "Inhale", seconds: 0.33 }, { label: "Exhale", seconds: 0.33 }
-      ], cycles: 90, note: "Rapid rhythmic. Stop if dizzy.",
-        instructions: "Rapid small belly breaths through the nose. Keep it rhythmic. Stop if dizzy." },
-      { id: "power30", name: "POWER 30 + HOLD", phases: [
-        { label: "Inhale", seconds: 1 }, { label: "Exhale", seconds: 1 }
-      ], cycles: 30, tail: [{ label: "Exhale Hold", seconds: 45 }, { label: "Inhale Hold", seconds: 15 }],
+      {
+        id: "box4444",
+        name: "BOX 4:4:4:4",
+        phases: [
+          { label: "Inhale", seconds: 4 }, { label: "Hold", seconds: 4 },
+          { label: "Exhale", seconds: 4 }, { label: "Hold", seconds: 4 }
+        ],
+        note: "Balanced box breathing.",
+        instructions: "Nasal breathing. Inhale 4, hold 4, exhale 4, hold 4. Keep shoulders soft and belly relaxed."
+      },
+      {
+        id: "coherent55",
+        name: "COHERENT 5:5",
+        phases: [
+          { label: "Inhale", seconds: 5 }, { label: "Exhale", seconds: 5 }
+        ],
+        note: "Resonant HRV.",
+        instructions: "Gentle nasal breathing. Inhale 5, exhale 5. Smooth and quiet."
+      },
+      {
+        id: "478",
+        name: "4–7–8",
+        phases: [
+          { label: "Inhale", seconds: 4 }, { label: "Hold", seconds: 7 }, { label: "Exhale", seconds: 8 }
+        ],
+        note: "Downshift for sleep.",
+        instructions: "Exhale through the mouth for 8 with the tongue placed at the roof of the mouth behind the teeth."
+      },
+      {
+        id: "sigh",
+        name: "PHYSIOLOGICAL SIGH",
+        phases: [
+          { label: "Inhale", seconds: 2 }, { label: "Top-up Inhale", seconds: 1 }, { label: "Long Exhale", seconds: 6 }
+        ],
+        note: "Two inhales and long exhale.",
+        instructions: "Two quick nasal inhales, then a long soft mouth exhale. Keep the second inhale short."
+      },
+      {
+        id: "cadence36",
+        name: "CADENCE 3:6",
+        phases: [
+          { label: "Inhale", seconds: 3 }, { label: "Exhale", seconds: 6 }
+        ],
+        note: "Vagal tone focus.",
+        instructions: "Nasal inhale 3, soft mouth exhale 6. Do not force the exhale."
+      },
+      {
+        id: "bof",
+        name: "BREATH OF FIRE 60s",
+        phases: [
+          { label: "Inhale", seconds: 0.33 }, { label: "Exhale", seconds: 0.33 }
+        ],
+        cycles: 90,
+        note: "Rapid rhythmic. Stop if dizzy.",
+        instructions: "Rapid small belly breaths through the nose. Keep it rhythmic. Stop if dizzy."
+      },
+      {
+        id: "power30",
+        name: "POWER 30 + HOLD",
+        phases: [
+          { label: "Inhale", seconds: 1 }, { label: "Exhale", seconds: 1 }
+        ],
+        cycles: 30,
+        tail: [{ label: "Exhale Hold", seconds: 45 }, { label: "Inhale Hold", seconds: 15 }],
         note: "Wim Hof style.",
-        instructions: "Thirty fast breaths, then exhale hold, then short inhale hold. Stay seated and relaxed." },
-      { id: "tesla369", name: "TESLA 3:6:9", phases: [
-        { label: "Inhale", seconds: 3 }, { label: "Hold", seconds: 6 }, { label: "Exhale", seconds: 9 }
-      ], note: "Sacred 3 6 9.",
-        instructions: "Nasal inhale 3, hold 6, soft exhale 9. Relax jaw and belly." },
-      { id: "golden", name: "GOLDEN RATIO 5:3:8", phases: [
-        { label: "Inhale", seconds: 5 }, { label: "Hold", seconds: 3 }, { label: "Exhale", seconds: 8 }
-      ], note: "Fibonacci inspired.",
-        instructions: "Inhale 5, hold 3, exhale 8. Keep the breath light and steady." },
-      { id: "fibo235", name: "FIBONACCI 2:3:5:3", phases: [
-        { label: "Inhale", seconds: 2 }, { label: "Hold", seconds: 3 }, { label: "Exhale", seconds: 5 }, { label: "Hold", seconds: 3 }
-      ], note: "Fibonacci box.",
-        instructions: "Inhale 2, hold 3, exhale 5, hold 3. Gentle pace." },
-      { id: "seven11", name: "7 11 RELAX", phases: [
-        { label: "Inhale", seconds: 7 }, { label: "Exhale", seconds: 11 }
-      ], note: "Long exhale.",
-        instructions: "Inhale 7 through the nose, exhale 11 through the mouth. Long and soft." },
-      { id: "twofour", name: "2 4 CALM", phases: [
-        { label: "Inhale", seconds: 2 }, { label: "Exhale", seconds: 4 }
-      ], note: "Quick downshift.",
-        instructions: "Inhale 2, exhale 4. Easy nasal breathing." },
-      { id: "custom", name: "CUSTOM", customizable: true, phases: [
-        { label: "Inhale", seconds: 4 }, { label: "Hold", seconds: 4 },
-        { label: "Exhale", seconds: 4 }, { label: "Hold", seconds: 4 }
-      ], note: "Your timing.",
-        instructions: "Set your timing and breathe lightly. Keep shoulders relaxed." }
+        instructions: "Thirty fast breaths, then exhale hold, then short inhale hold. Stay seated and relaxed."
+      },
+      {
+        id: "tesla369",
+        name: "TESLA 3:6:9",
+        phases: [
+          { label: "Inhale", seconds: 3 }, { label: "Hold", seconds: 6 }, { label: "Exhale", seconds: 9 }
+        ],
+        note: "Sacred 3 6 9.",
+        instructions: "Nasal inhale 3, hold 6, soft exhale 9. Relax jaw and belly."
+      },
+      {
+        id: "golden",
+        name: "GOLDEN RATIO 5:3:8",
+        phases: [
+          { label: "Inhale", seconds: 5 }, { label: "Hold", seconds: 3 }, { label: "Exhale", seconds: 8 }
+        ],
+        note: "Fibonacci inspired.",
+        instructions: "Inhale 5, hold 3, exhale 8. Keep the breath light and steady."
+      },
+      {
+        id: "fibo235",
+        name: "FIBONACCI 2:3:5:3",
+        phases: [
+          { label: "Inhale", seconds: 2 }, { label: "Hold", seconds: 3 }, { label: "Exhale", seconds: 5 }, { label: "Hold", seconds: 3 }
+        ],
+        note: "Fibonacci box.",
+        instructions: "Inhale 2, hold 3, exhale 5, hold 3. Gentle pace."
+      },
+      {
+        id: "seven11",
+        name: "7 11 RELAX",
+        phases: [
+          { label: "Inhale", seconds: 7 }, { label: "Exhale", seconds: 11 }
+        ],
+        note: "Long exhale.",
+        instructions: "Inhale 7 through the nose, exhale 11 through the mouth. Long and soft."
+      },
+      {
+        id: "twofour",
+        name: "2 4 CALM",
+        phases: [
+          { label: "Inhale", seconds: 2 }, { label: "Exhale", seconds: 4 }
+        ],
+        note: "Quick downshift.",
+        instructions: "Inhale 2, exhale 4. Easy nasal breathing."
+      },
+      {
+        id: "custom",
+        name: "CUSTOM",
+        customizable: true,
+        phases: [
+          { label: "Inhale", seconds: 4 }, { label: "Hold", seconds: 4 },
+          { label: "Exhale", seconds: 4 }, { label: "Hold", seconds: 4 }
+        ],
+        note: "Your timing.",
+        instructions: "Set your timing and breathe lightly. Keep shoulders relaxed."
+      }
     ],
     []
   );
@@ -129,7 +197,7 @@ export default function BreathLab() {
   function findFirstInhaleIndex(pPlan) {
     const idx = pPlan.findIndex(ph => (ph.label || "").toLowerCase().includes("inhale"));
     return idx >= 0 ? idx : 0;
-    }
+  }
 
   const handleStart = () => {
     const inhaleIdx = findFirstInhaleIndex(plan);
@@ -278,7 +346,7 @@ export default function BreathLab() {
 
   const displayPhase = countdown ? "GET READY" : phase.label;
 
-  // ---------- Custom dropdown (full width, 40px) ----------
+  // ---------- Custom dropdown ----------
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   useEffect(() => {
@@ -286,6 +354,47 @@ export default function BreathLab() {
     document.addEventListener("pointerdown", onDoc);
     return () => document.removeEventListener("pointerdown", onDoc);
   }, []);
+
+  // Derive a hint if a preset has no explicit instructions
+  function instructionFor(p) {
+    if (!p) return "";
+    const labels = (p.phases || []).map(ph => (ph.label || "").toLowerCase());
+    const get = (name) =>
+      p.phases.find(ph => (ph.label || "").toLowerCase().includes(name))?.seconds ?? 0;
+
+    const inS = get("inhale");
+    const exS = get("exhale");
+    const holdCount = labels.filter(l => l.includes("hold")).length;
+
+    if (p.id === "478" || (inS === 4 && holdCount >= 1 && exS === 8)) {
+      return "Exhale through the mouth for 8 with the tongue placed at the roof of the mouth behind the teeth.";
+    }
+    if (p.id === "sigh" || (labels.includes("top-up inhale") && labels.includes("long exhale"))) {
+      return "Two quick nasal inhales, then a long soft mouth exhale. Keep the second inhale short.";
+    }
+    if (p.id === "bof") {
+      return "Rapid small belly breaths through the nose. Keep it rhythmic. Stop if dizzy.";
+    }
+    if (p.id === "power30") {
+      return "Thirty fast breaths, then exhale hold, then short inhale hold. Stay seated and relaxed.";
+    }
+
+    const isBoxLike =
+      p.phases.length === 4 &&
+      holdCount >= 2 &&
+      Math.abs(inS - exS) < 0.51;
+
+    if (isBoxLike) {
+      return "Nasal breathing. Inhale, hold, exhale, hold in equal counts. Keep shoulders soft and belly relaxed.";
+    }
+    if (holdCount === 0 && inS && exS && Math.abs(inS - exS) <= 0.5 && (inS === 5 || inS === 6)) {
+      return "Gentle nasal breathing. Inhale and exhale evenly. Smooth and quiet.";
+    }
+    if (exS >= inS * 1.8) {
+      return "Inhale through the nose, soft extended mouth exhale. Keep the exhale unforced.";
+    }
+    return "Breathe lightly and smoothly. Relax the jaw and shoulders.";
+  }
 
   return (
     <div style={{ minHeight: "100vh" }}>
@@ -396,7 +505,18 @@ export default function BreathLab() {
                 <mask id="lungsMask">
                   <rect x="0" y="0" width={size} height={size} fill="black" />
                   <g transform={`translate(${lungTx},${lungTy}) scale(${svgScale})`}>
-                    {lungPaths ? (<><path d={lungPaths[0]} fill="white" /><path d={lungPaths[1]} fill="white" /><path d={lungPaths[2]} fill="white" /></>) : (<><ellipse cx={250} cy={260} rx={150} ry={210} fill="white" /><ellipse cx={250} cy={260} rx={150} ry={210} fill="white" /></>)}
+                    {lungPaths ? (
+                      <>
+                        <path d={lungPaths[0]} fill="white" />
+                        <path d={lungPaths[1]} fill="white" />
+                        <path d={lungPaths[2]} fill="white" />
+                      </>
+                    ) : (
+                      <>
+                        <ellipse cx={250} cy={260} rx={150} ry={210} fill="white" />
+                        <ellipse cx={250} cy={260} rx={150} ry={210} fill="white" />
+                      </>
+                    )}
                   </g>
                 </mask>
               </defs>
@@ -410,13 +530,15 @@ export default function BreathLab() {
                 const SAFE = 16;
                 const inhaleX = Math.max(SAFE, padding - gap);
                 const exhaleX = Math.min(size - SAFE, size - padding + gap);
-                return (<>
-                  <text x={size / 2} y={padding - 22} textAnchor="middle" fill="#e5e7eb" fontSize={18}>HOLD</text>
-                  <text x={size / 2} y={size - padding + 38} textAnchor="middle" fill="#e5e7eb" fontSize={18}>HOLD</text>
-                  {/* SHORTENED LEFT/RIGHT BOX LABELS ONLY */}
-                  <text x={inhaleX} y={size / 2} textAnchor="end" dominantBaseline="middle" fill={GOLD} fontSize={18}>IN-H</text>
-                  <text x={exhaleX} y={size / 2} textAnchor="start" dominantBaseline="middle" fill={GOLD} fontSize={18}>EX-H</text>
-                </>);
+                return (
+                  <>
+                    <text x={size / 2} y={padding - 22} textAnchor="middle" fill="#e5e7eb" fontSize={18}>HOLD</text>
+                    <text x={size / 2} y={size - padding + 38} textAnchor="middle" fill="#e5e7eb" fontSize={18}>HOLD</text>
+                    {/* SHORTENED LEFT/RIGHT BOX LABELS ONLY */}
+                    <text x={inhaleX} y={size / 2} textAnchor="end" dominantBaseline="middle" fill={GOLD} fontSize={18}>IN-H</text>
+                    <text x={exhaleX} y={size / 2} textAnchor="start" dominantBaseline="middle" fill={GOLD} fontSize={18}>EX-H</text>
+                  </>
+                );
               })()}
 
               {/* Inner track */}
@@ -424,7 +546,18 @@ export default function BreathLab() {
 
               {/* Lungs outline */}
               <g transform={`translate(${lungTx},${lungTy}) scale(${svgScale})`} opacity="0.95" pointerEvents="none">
-                {lungPaths ? (<><path d={lungPaths[0]} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" /><path d={lungPaths[1]} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" /><path d={lungPaths[2]} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" /></>) : (<><ellipse cx={250} cy={260} rx={150} ry={210} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" /><ellipse cx={250} cy={260} rx={150} ry={210} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" /></>)}
+                {lungPaths ? (
+                  <>
+                    <path d={lungPaths[0]} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" />
+                    <path d={lungPaths[1]} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" />
+                    <path d={lungPaths[2]} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" />
+                  </>
+                ) : (
+                  <>
+                    <ellipse cx={250} cy={260} rx={150} ry={210} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" />
+                    <ellipse cx={250} cy={260} rx={150} ry={210} fill="#101010" stroke="#9ca3af" strokeWidth="1.4" />
+                  </>
+                )}
               </g>
 
               {/* Water fill */}
@@ -434,7 +567,14 @@ export default function BreathLab() {
               <circle cx={dot.x} cy={dot.y} r="10" fill={GOLD} filter="url(#glow)" />
 
               {/* Countdown overlay */}
-              {countdown ? (<><rect x={0} y={0} width={size} height={size} fill="#000" opacity="0.35" /><text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="middle" fill={GOLD} fontSize={Math.round(size*0.28)} fontWeight="700">{countdown}</text></>) : null}
+              {countdown ? (
+                <>
+                  <rect x={0} y={0} width={size} height={size} fill="#000" opacity="0.35" />
+                  <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="middle" fill={GOLD} fontSize={Math.round(size*0.28)} fontWeight="700">
+                    {countdown}
+                  </text>
+                </>
+              ) : null}
             </svg>
           </div>
 
@@ -447,13 +587,16 @@ export default function BreathLab() {
         </section>
 
         {/* Short instructions shown right above START */}
-        {current.instructions ? (
-          <p style={{ color: "#9ca3af", fontSize: 13, textAlign: "center", marginTop: 2 }}>
-            {current.instructions}
-          </p>
-        ) : null}
+        {(() => {
+          const hint = current?.instructions || instructionFor(current);
+          return hint ? (
+            <p style={{ color: "#9ca3af", fontSize: 13, textAlign: "center", marginTop: 2 }}>
+              {hint}
+            </p>
+          ) : null;
+        })()}
 
-        {/* START/PAUSE button moved here — directly above the footer */}
+        {/* START/PAUSE button */}
         <button
           onClick={() => { if (running) setRunning(false); else if (!countdown) handleStart(); }}
           disabled={!!countdown}
