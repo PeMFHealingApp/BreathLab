@@ -6,24 +6,35 @@ export default function BreathLab() {
   // Font + base styles
   useEffect(() => {
     const style = document.createElement("style");
-    style.innerHTML =
-      "@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap'); body{font-family:'Quicksand',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#000;color:#e5e7eb}";
+    style.innerHTML = `
+      @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600;700&display=swap');
+      html,body{margin:0;padding:0;width:100%;max-width:100%;overflow-x:hidden}
+      *{box-sizing:border-box}
+      body{font-family:'Quicksand',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#000;color:#e5e7eb}
+    `;
     document.head.appendChild(style);
     return () => document.head.removeChild(style);
   }, []);
 
-  // Responsive stage
+  // Responsive stage with small safety gutter
   const [size, setSize] = useState(360);
   useEffect(() => {
-    const onR = () =>
-      setSize(Math.max(320, Math.min(540, Math.min(window.innerWidth, 720) - 40)));
+    const onR = () => {
+      const vw = Math.min(window.innerWidth, 720);
+      // leave ~48px for paddings and borders to avoid tiny overflow
+      const target = Math.max(320, Math.min(540, vw - 48));
+      setSize(target);
+    };
     onR();
     window.addEventListener("resize", onR);
     return () => window.removeEventListener("resize", onR);
   }, []);
 
   // Load lungs from public
-  const RAW_SVG = import.meta.env.BASE_URL + "lungs-lung-svgrepo-com.svg";
+  const RAW_SVG = (typeof process !== "undefined" && process.env && process.env.PUBLIC_URL)
+    ? `${process.env.PUBLIC_URL}/lungs-lung-svgrepo-com.svg`
+    : "/lungs-lung-svgrepo-com.svg";
+
   const [lungPaths, setLungPaths] = useState(null);
   useEffect(() => {
     let cancelled = false;
@@ -41,7 +52,7 @@ export default function BreathLab() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [RAW_SVG]);
 
   // Presets with notes and short how-to instructions
   const presets = useMemo(
@@ -397,8 +408,8 @@ export default function BreathLab() {
   }
 
   return (
-    <div style={{ minHeight: "100vh" }}>
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: 16, display: "grid", gap: 12 }}>
+    <div style={{ minHeight: "100vh", width:"100%", maxWidth:"100vw", overflowX:"hidden" }}>
+      <div style={{ maxWidth: 760, width:"100%", margin: "0 auto", padding: 16, display: "grid", gap: 12, overflowX:"hidden" }}>
         {/* Accessible app name for screen readers only */}
         <h1 style={{ position: "absolute", left: -9999, width: 1, height: 1, overflow: "hidden" }}>Breath Lab</h1>
 
@@ -493,7 +504,12 @@ export default function BreathLab() {
           </div>
 
           <div style={{ display: "flex", justifyContent: "center", position: "relative" }}>
-            <svg width={size} height={size} overflow="visible" style={{ display: "block" }}>
+            <svg
+              width={size}
+              height={size}
+              overflow="visible"
+              style={{ display: "block", maxWidth: "100%", height: "auto" }}
+            >
               <defs>
                 <filter id="glow"><feGaussianBlur stdDeviation="4" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
                 <linearGradient id="lungGrad" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor={GOLD} stopOpacity="0.9" /><stop offset="100%" stopColor={GOLD} stopOpacity="0.25" /></linearGradient>
@@ -534,7 +550,6 @@ export default function BreathLab() {
                   <>
                     <text x={size / 2} y={padding - 22} textAnchor="middle" fill="#e5e7eb" fontSize={18}>HOLD</text>
                     <text x={size / 2} y={size - padding + 38} textAnchor="middle" fill="#e5e7eb" fontSize={18}>HOLD</text>
-                    {/* SHORTENED LEFT/RIGHT BOX LABELS ONLY */}
                     <text x={inhaleX} y={size / 2} textAnchor="end" dominantBaseline="middle" fill={GOLD} fontSize={18}>IN-H</text>
                     <text x={exhaleX} y={size / 2} textAnchor="start" dominantBaseline="middle" fill={GOLD} fontSize={18}>EX-H</text>
                   </>
