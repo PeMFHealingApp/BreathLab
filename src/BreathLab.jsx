@@ -31,10 +31,8 @@ export default function BreathLab() {
   }, []);
 
   // Load lungs from public
-  const RAW_SVG = (typeof process !== "undefined" && process.env && process.env.PUBLIC_URL)
-    ? `${process.env.PUBLIC_URL}/lungs-lung-svgrepo-com.svg`
-    : "/lungs-lung-svgrepo-com.svg";
-
+  const RAW_SVG = import.meta.env.BASE_URL + 'lungs-lung-svgrepo-com.svg';
+  
   const [lungPaths, setLungPaths] = useState(null);
   useEffect(() => {
     let cancelled = false;
